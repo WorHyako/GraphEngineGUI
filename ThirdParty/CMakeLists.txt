@@ -1,4 +1,3 @@
-
 ##############
 ### Vulkan ###
 ##############
@@ -7,7 +6,6 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_PROTOTYPES")
 find_package(Vulkan REQUIRED)
 list(APPEND ThirdParty_Libs ${Vulkan_LIBRARIES})
 list(APPEND ThirdParty_Include_Dirs ${Vulkan_INCLUDE_DIRS})
-#message(FATAL_ERROR ${Vulkan_INCLUDE_DIRS})
 
 ############
 ### glfw ###
