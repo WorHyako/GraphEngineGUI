@@ -1,99 +1,37 @@
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
-#include "GLFW/glfw3.h"
-
-#include <vulkan/vulkan.h>
-
 #include <iostream>
 
 #include "ApiSetup/VulkanSetuper.hpp"
 #include "ApiSetup/VulkanData.hpp"
+#include "ApiSetup/FrameBuffer.hpp"
+#include "ApiSetup/ImGuiSetup.hpp"
+#include "Controls/MainWindow.hpp"
+
+#include "WorLibrary/TemplateWrapper/Singleton.hpp"
 
 using namespace GEGui;
 
 // Main code
 int main(int, char **) {
-    glfwSetErrorCallback(ApiSetup::VulkanSetuper::GlfwErrorCallback);
-    if (!glfwInit())
-        return 1;
-
-    // Create window with Vulkan context
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", nullptr, nullptr);
-    if (!glfwVulkanSupported()) {
-        printf("GLFW: Vulkan Not Supported\n");
-        return 1;
+    auto& window = Wor::TemplateWrapper::Singleton<Controls::MainWindow>::GetInstance();
+    if (!window.Init()) {
+        return -300;
     }
 
-    ImVector<const char *> extensions;
-    uint32_t extensionsCount = 0;
-    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&extensionsCount);
-    for (uint32_t i = 0; i < extensionsCount; i++)
-        extensions.push_back(glfwExtensions[i]);
-    GEGui::ApiSetup::VulkanSetuper::SetupVulkan(extensions);
+    auto setupVulkanRes = ApiSetup::VulkanSetuper::SetupVulkan();
+    if (setupVulkanRes != ApiSetup::VulkanSetuper::Status::Setuped) {
+        return -200;
+    }
 
-    // Create Window Surface
-    VkSurfaceKHR surface;
-    VkResult err = glfwCreateWindowSurface(ApiSetup::VulkanData::g_Instance,
-                                           window,
-                                           ApiSetup::VulkanData::g_Allocator,
-                                           &surface);
-    ApiSetup::VulkanSetuper::CheckVkResult(err);
+    window.CreateWindowSurface();
 
-    // Create Framebuffers
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
-    ImGui_ImplVulkanH_Window *wd = &ApiSetup::VulkanData::g_MainWindowData;
-    ApiSetup::VulkanSetuper::SetupVulkanWindow(wd, surface, w, h);
+    const auto size = window.GetFrameSize();
+    ApiSetup::VulkanSetuper::SetupVulkanWindow(&ApiSetup::VulkanData::g_MainWindowData,
+                                               window.GetSurface(),
+                                               size.x,
+                                               size.y);
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
-    (void) io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForVulkan(window, true);
-    ImGui_ImplVulkan_InitInfo initInfo {
-            .Instance = ApiSetup::VulkanData::g_Instance,
-            .PhysicalDevice = ApiSetup::VulkanData::g_PhysicalDevice,
-            .Device = ApiSetup::VulkanData::g_Device,
-            .QueueFamily = ApiSetup::VulkanData::g_QueueFamily,
-            .Queue = ApiSetup::VulkanData::g_Queue,
-            .PipelineCache = ApiSetup::VulkanData::g_PipelineCache,
-            .DescriptorPool = ApiSetup::VulkanData::g_DescriptorPool,
-            .Subpass = 0,
-            .MinImageCount = static_cast<std::uint32_t>(ApiSetup::VulkanData::g_MinImageCount),
-            .ImageCount = wd->ImageCount,
-            .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-            .Allocator = ApiSetup::VulkanData::g_Allocator,
-            .CheckVkResultFn = ApiSetup::VulkanSetuper::CheckVkResult
-    };
-    ImGui_ImplVulkan_Init(&initInfo, wd->RenderPass);
-
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != nullptr);
-
+    auto &imGuiSetup = Wor::TemplateWrapper::Singleton<ApiSetup::ImGuiSetup>::GetInstance();
+    imGuiSetup.Init(window);
     // Upload Fonts
     {
         // Use any command queue
@@ -110,13 +48,14 @@ int main(int, char **) {
 
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 
-        VkSubmitInfo end_info = {};
-        end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        end_info.commandBufferCount = 1;
-        end_info.pCommandBuffers = &commandBuffer;
+        VkSubmitInfo endInfo = {
+                .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                .commandBufferCount = 1,
+                .pCommandBuffers = &commandBuffer
+        };
         err = vkEndCommandBuffer(commandBuffer);
         ApiSetup::VulkanSetuper::CheckVkResult(err);
-        err = vkQueueSubmit(ApiSetup::VulkanData::g_Queue, 1, &end_info, VK_NULL_HANDLE);
+        err = vkQueueSubmit(ApiSetup::VulkanData::g_Queue, 1, &endInfo, VK_NULL_HANDLE);
         ApiSetup::VulkanSetuper::CheckVkResult(err);
 
         err = vkDeviceWaitIdle(ApiSetup::VulkanData::g_Device);
