@@ -4,3 +4,6 @@
 [submodule "ThirdParty/glfw"]
 	path = ThirdParty/glfw
 	url = https://github.com/glfw/glfw
+[submodule "ThirdParty/WorLibrary"]
+	path = ThirdParty/WorLibrary
+	url = https://github.com/WorHyako/worLibrary

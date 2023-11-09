@@ -2,12 +2,13 @@
 
 #include "ApiSetup/VulkanData.hpp"
 
+#include "GLFW/glfw3.h"
+
 #include <vector>
-#include <iostream>
 
 using namespace GEGui::ApiSetup;
 
-void VulkanSetuper::SetupVulkanWindow(ImGui_ImplVulkanH_Window *wd,
+VulkanSetuper::Status VulkanSetuper::SetupVulkanWindow(ImGui_ImplVulkanH_Window *wd,
                                       VkSurfaceKHR surface,
                                       int width,
                                       int height) noexcept {
@@ -81,8 +82,13 @@ void VulkanSetuper::CleanupVulkanWindow() noexcept {
                                     VulkanData::g_Allocator);
 }
 
-void VulkanSetuper::SetupVulkan(ImVector<const char *> instance_extensions) noexcept {
-
+VulkanSetuper::Status VulkanSetuper::SetupVulkan() noexcept {
+    ImVector<const char *> extensions;
+    uint32_t extensionsCount = 0;
+    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&extensionsCount);
+    for (uint32_t i = 0; i < extensionsCount; i++) {
+        extensions.push_back(glfwExtensions[i]);
+    }
     VkResult err;
 
     // Create Vulkan Instance
@@ -101,11 +107,11 @@ void VulkanSetuper::SetupVulkan(ImVector<const char *> instance_extensions) noex
 
         // Enable required extensions
         if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) {
-            instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+            extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         }
 #ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
         if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
-            instance_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+            extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
             createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
 #endif
@@ -119,8 +125,8 @@ void VulkanSetuper::SetupVulkan(ImVector<const char *> instance_extensions) noex
 #endif
 
         // Create Vulkan Instance
-        createInfo.enabledExtensionCount = static_cast<std::uint32_t>(instance_extensions.Size);
-        createInfo.ppEnabledExtensionNames = instance_extensions.Data;
+        createInfo.enabledExtensionCount = static_cast<std::uint32_t>(extensions.Size);
+        createInfo.ppEnabledExtensionNames = extensions.Data;
         err = vkCreateInstance(&createInfo,
                                VulkanData::g_Allocator,
                                &VulkanData::g_Instance);
@@ -346,11 +352,13 @@ bool VulkanSetuper::IsExtensionAvailable(const ImVector<VkExtensionProperties> &
 }
 
 void VulkanSetuper::CheckVkResult(VkResult err) noexcept {
-    if (err == 0)
+    if (err == 0) {
         return;
+    }
     fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-    if (err < 0)
+    if (err < 0) {
         abort();
+    }
 }
 
 void VulkanSetuper::GlfwErrorCallback(int error, const char *description) noexcept {

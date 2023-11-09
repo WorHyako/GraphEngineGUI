@@ -2,6 +2,8 @@
 
 #include "imgui_impl_vulkan.h"
 
+#include <cstdint>
+
 namespace GEGui::ApiSetup {
 
 #define GLFW_INCLUDE_NONE
@@ -33,12 +35,22 @@ namespace GEGui::ApiSetup {
      */
     class VulkanSetuper {
     public:
-
         /**
          *
-         * @param instance_extensions
          */
-        static void SetupVulkan(ImVector<const char *> instance_extensions) noexcept;
+         enum class Status : std::uint8_t {
+             /**
+              *
+              */
+              ZeroCheck,
+
+              /**
+               *
+               */
+               Setuped
+         };
+
+        [[nodiscard]] static Status SetupVulkan() noexcept;
 
         /**
          * All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
@@ -48,7 +60,7 @@ namespace GEGui::ApiSetup {
          * @param width
          * @param height
          */
-        static void SetupVulkanWindow(ImGui_ImplVulkanH_Window *wd,
+        [[nodiscard]] static Status SetupVulkanWindow(ImGui_ImplVulkanH_Window *wd,
                                       VkSurfaceKHR surface,
                                       int width,
                                       int height) noexcept;
