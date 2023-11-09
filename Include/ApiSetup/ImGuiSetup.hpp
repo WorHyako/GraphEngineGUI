@@ -36,5 +36,16 @@ namespace GEGui::ApiSetup {
          */
         std::unique_ptr<ImGuiContext*> context;
 
+        /**
+         *
+         */
+        ImGuiIO *_io;
+
+    public:
+#pragma region Accessors
+
+        [[nodiscard]] ImGuiIO& GetIO() noexcept;
+
+#pragma endregion Accessors
     };
 }

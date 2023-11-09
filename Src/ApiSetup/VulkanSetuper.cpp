@@ -352,11 +352,13 @@ bool VulkanSetuper::IsExtensionAvailable(const ImVector<VkExtensionProperties> &
 }
 
 void VulkanSetuper::CheckVkResult(VkResult err) noexcept {
-    if (err == 0)
+    if (err == 0) {
         return;
+    }
     fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-    if (err < 0)
+    if (err < 0) {
         abort();
+    }
 }
 
 void VulkanSetuper::GlfwErrorCallback(int error, const char *description) noexcept {

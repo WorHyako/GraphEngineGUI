@@ -10,12 +10,12 @@ using namespace GEGui::ApiSetup;
 void ImGuiSetup::Create() noexcept {
     IMGUI_CHECKVERSION();
     context = std::make_unique<ImGuiContext *>(ImGui::CreateContext());
-    ImGuiIO &io = ImGui::GetIO();
-    (void) io;
+    _io = &ImGui::GetIO();
+    (void) _io;
     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    _io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    _io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 }
 
 void ImGuiSetup::SetupColor() noexcept {
@@ -23,6 +23,7 @@ void ImGuiSetup::SetupColor() noexcept {
 }
 
 void ImGuiSetup::Init(const Controls::MainWindow& window) noexcept {
+    Create();
     ImGui_ImplGlfw_InitForVulkan(window.GetWindow(), true);
     ImGui_ImplVulkan_InitInfo initInfo {
             .Instance = ApiSetup::VulkanData::g_Instance,
@@ -41,3 +42,11 @@ void ImGuiSetup::Init(const Controls::MainWindow& window) noexcept {
     };
     ImGui_ImplVulkan_Init(&initInfo, VulkanData::g_MainWindowData.RenderPass);
 }
+
+#pragma region Accessors
+
+ImGuiIO &ImGuiSetup::GetIO() noexcept {
+    return *_io;
+}
+
+#pragma endregion Accessors

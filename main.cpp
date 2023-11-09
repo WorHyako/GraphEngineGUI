@@ -5,71 +5,47 @@
 #include "ApiSetup/FrameBuffer.hpp"
 #include "ApiSetup/ImGuiSetup.hpp"
 #include "Controls/MainWindow.hpp"
+#include "ApiSetup/FontLoader.hpp"
 
 #include "WorLibrary/TemplateWrapper/Singleton.hpp"
+#include "imgui_impl_glfw.h"
+#include "GLFW/glfw3.h"
 
 using namespace GEGui;
 
 // Main code
 int main(int, char **) {
-    auto& window = Wor::TemplateWrapper::Singleton<Controls::MainWindow>::GetInstance();
-    if (!window.Init()) {
+    auto& mainWindow = Wor::TemplateWrapper::Singleton<Controls::MainWindow>::GetInstance();
+    if (!mainWindow.Init()) {
         return -300;
     }
 
     auto setupVulkanRes = ApiSetup::VulkanSetuper::SetupVulkan();
-    if (setupVulkanRes != ApiSetup::VulkanSetuper::Status::Setuped) {
-        return -200;
-    }
+//    if (setupVulkanRes != ApiSetup::VulkanSetuper::Status::Setuped) {
+//        return -200;
+//    }
 
-    window.CreateWindowSurface();
+    mainWindow.CreateWindowSurface();
 
-    const auto size = window.GetFrameSize();
+    const auto size = mainWindow.GetFrameSize();
     ApiSetup::VulkanSetuper::SetupVulkanWindow(&ApiSetup::VulkanData::g_MainWindowData,
-                                               window.GetSurface(),
+                                               mainWindow.GetSurface(),
                                                size.x,
                                                size.y);
 
     auto &imGuiSetup = Wor::TemplateWrapper::Singleton<ApiSetup::ImGuiSetup>::GetInstance();
-    imGuiSetup.Init(window);
-    // Upload Fonts
-    {
-        // Use any command queue
-        VkCommandPool commandPool = wd->Frames[wd->FrameIndex].CommandPool;
-        VkCommandBuffer commandBuffer = wd->Frames[wd->FrameIndex].CommandBuffer;
+    imGuiSetup.Init(mainWindow);
 
-        err = vkResetCommandPool(ApiSetup::VulkanData::g_Device, commandPool, 0);
-        ApiSetup::VulkanSetuper::CheckVkResult(err);
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = vkBeginCommandBuffer(commandBuffer, &beginInfo);
-        ApiSetup::VulkanSetuper::CheckVkResult(err);
-
-        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-
-        VkSubmitInfo endInfo = {
-                .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-                .commandBufferCount = 1,
-                .pCommandBuffers = &commandBuffer
-        };
-        err = vkEndCommandBuffer(commandBuffer);
-        ApiSetup::VulkanSetuper::CheckVkResult(err);
-        err = vkQueueSubmit(ApiSetup::VulkanData::g_Queue, 1, &endInfo, VK_NULL_HANDLE);
-        ApiSetup::VulkanSetuper::CheckVkResult(err);
-
-        err = vkDeviceWaitIdle(ApiSetup::VulkanData::g_Device);
-        ApiSetup::VulkanSetuper::CheckVkResult(err);
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
-    }
+    ApiSetup::FontLoader::Load();
 
     // Our state
     bool showDemoWindow = true;
     bool showAnotherWindow = false;
     ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    VkResult err;
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(mainWindow.GetWindow())) {
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
@@ -77,11 +53,12 @@ int main(int, char **) {
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
+        auto& wd = ApiSetup::VulkanData::g_MainWindowData;
         // Resize swap chain?
         if (ApiSetup::VulkanData::g_SwapChainRebuild) {
             int width;
             int height;
-            glfwGetFramebufferSize(window, &width, &height);
+            glfwGetFramebufferSize(mainWindow.GetWindow(), &width, &height);
             if (width > 0 && height > 0) {
                 ImGui_ImplVulkan_SetMinImageCount(ApiSetup::VulkanData::g_MinImageCount);
                 ImGui_ImplVulkanH_CreateOrResizeWindow(ApiSetup::VulkanData::g_Instance,
@@ -132,6 +109,7 @@ int main(int, char **) {
             ImGui::SameLine();
             ImGui::Text("counter = %d", counter);
 
+            auto &io = imGuiSetup.GetIO();
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
@@ -152,12 +130,12 @@ int main(int, char **) {
         ImDrawData *drawData = ImGui::GetDrawData();
         const bool isMinimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
         if (!isMinimized) {
-            wd->ClearValue.color.float32[0] = clearColor.x * clearColor.w;
-            wd->ClearValue.color.float32[1] = clearColor.y * clearColor.w;
-            wd->ClearValue.color.float32[2] = clearColor.z * clearColor.w;
-            wd->ClearValue.color.float32[3] = clearColor.w;
-            ApiSetup::VulkanSetuper::FrameRender(wd, drawData);
-            ApiSetup::VulkanSetuper::FramePresent(wd);
+            wd.ClearValue.color.float32[0] = clearColor.x * clearColor.w;
+            wd.ClearValue.color.float32[1] = clearColor.y * clearColor.w;
+            wd.ClearValue.color.float32[2] = clearColor.z * clearColor.w;
+            wd.ClearValue.color.float32[3] = clearColor.w;
+            ApiSetup::VulkanSetuper::FrameRender(&wd, drawData);
+            ApiSetup::VulkanSetuper::FramePresent(&wd);
         }
     }
 
@@ -171,8 +149,7 @@ int main(int, char **) {
     GEGui::ApiSetup::VulkanSetuper::CleanupVulkanWindow();
     GEGui::ApiSetup::VulkanSetuper::CleanupVulkan();
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    glfwDestroyWindow(mainWindow.GetWindow());
 
     return 0;
 }
