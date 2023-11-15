@@ -15,7 +15,7 @@ using namespace GEGui;
 
 // Main code
 int main(int, char **) {
-    auto& mainWindow = Wor::TemplateWrapper::Singleton<Controls::MainWindow>::GetInstance();
+    auto& mainWindow = Wor::TemplateWrapper::Singleton<Controls::MainWindow>::getInstance();
     if (!mainWindow.Init()) {
         return -300;
     }
@@ -33,7 +33,7 @@ int main(int, char **) {
                                                size.x,
                                                size.y);
 
-    auto &imGuiSetup = Wor::TemplateWrapper::Singleton<ApiSetup::ImGuiSetup>::GetInstance();
+    auto &imGuiSetup = Wor::TemplateWrapper::Singleton<ApiSetup::ImGuiSetup>::getInstance();
     imGuiSetup.Init(mainWindow);
 
     ApiSetup::FontLoader::Load();

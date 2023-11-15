@@ -54,6 +54,7 @@ VulkanSetuper::Status VulkanSetuper::SetupVulkanWindow(ImGui_ImplVulkanH_Window 
                                            width,
                                            height,
                                            VulkanData::g_MinImageCount);
+    return Status::Setuped;
 }
 
 void VulkanSetuper::CleanupVulkan() noexcept {
@@ -235,6 +236,7 @@ VulkanSetuper::Status VulkanSetuper::SetupVulkan() noexcept {
                                      &VulkanData::g_DescriptorPool);
         VulkanSetuper::CheckVkResult(err);
     }
+    return Status::Setuped;
 }
 
 static void FrameRender(ImGui_ImplVulkanH_Window *wd, ImDrawData *draw_data) {
