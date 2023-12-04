@@ -7,3 +7,6 @@
 [submodule "ThirdParty/WorLibrary"]
 	path = ThirdParty/WorLibrary
 	url = https://github.com/WorHyako/worLibrary
+[submodule "ThirdParty/OpenFontIcons"]
+	path = ThirdParty/OpenFontIcons
+	url = https://github.com/traverseda/OpenFontIcons.git

@@ -8,7 +8,6 @@
 using namespace GEGui::ApiSetup;
 
 void FontLoader::Load() noexcept {
-    // Use any command queue
     VkResult err;
     auto &windowData = ApiSetup::VulkanData::g_MainWindowData;
     VkCommandPool commandPool = windowData.Frames[windowData.FrameIndex].CommandPool;

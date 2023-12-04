@@ -9,9 +9,9 @@
 using namespace GEGui::ApiSetup;
 
 VulkanSetuper::Status VulkanSetuper::SetupVulkanWindow(ImGui_ImplVulkanH_Window *wd,
-                                      VkSurfaceKHR surface,
-                                      int width,
-                                      int height) noexcept {
+                                                       VkSurfaceKHR surface,
+                                                       int width,
+                                                       int height) noexcept {
     wd->Surface = surface;
 
     VkBool32 res;
@@ -386,8 +386,7 @@ void VulkanSetuper::FrameRender(ImGui_ImplVulkanH_Window *wd, ImDrawData *draw_d
 
     ImGui_ImplVulkanH_Frame *fd = &wd->Frames[wd->FrameIndex];
     {
-        err = vkWaitForFences(VulkanData::g_Device, 1, &fd->Fence, VK_TRUE,
-                              UINT64_MAX);    // wait indefinitely instead of periodically checking
+        err = vkWaitForFences(VulkanData::g_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);
         VulkanSetuper::CheckVkResult(err);
 
         err = vkResetFences(VulkanData::g_Device, 1, &fd->Fence);
