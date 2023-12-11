@@ -14,7 +14,7 @@ namespace GEGui::Widgets {
         /**
          *
          */
-        void Render() noexcept;
+        void render() noexcept;
 
     private:
         /**

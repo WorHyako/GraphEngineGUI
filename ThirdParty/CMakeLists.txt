@@ -28,7 +28,8 @@ file(GLOB Imgui_Sources ${ImGui_Root}/*.*pp)
 list(APPEND Imgui_Sources
         ${ImGui_Root}/backends/imgui_impl_vulkan.cpp
         ${ImGui_Root}/backends/imgui_impl_glfw.cpp
-        ${ImGui_Root}/backends/imgui_impl_opengl3.cpp)
+        ${ImGui_Root}/backends/imgui_impl_opengl3.cpp
+        ${ImGui_Root}/misc/cpp/imgui_stdlib.cpp)
 
 add_library(imgui STATIC)
 target_sources(imgui

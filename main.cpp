@@ -86,7 +86,7 @@ int main(int, char **) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        contentBrowserPanel.Render();
+        contentBrowserPanel.render();
 
         ImGui::Render();
         ImDrawData *drawData = ImGui::GetDrawData();
